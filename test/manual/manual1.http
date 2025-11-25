@@ -1,0 +1,4 @@
+GET https://testapi.fadelweb.site/api/article
+
+###
+GET http://103.140.79.11:8090/api/article

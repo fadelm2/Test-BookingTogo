@@ -1,0 +1,19 @@
+### GET request to example server
+GET http://localhost:8080/api/article
+
+###
+GET http://localhost:8080/api/article/53
+
+
+###
+POST http://localhost:8080/api/article
+Content-Type: application/json
+
+{
+     "title": "Cara Meningkatkan Performa Web Serviceasdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "content": "Artikel idassssssssssssssssssssssssssssssssssssadniasdddddddddddddddddddddddddddddddddddddddd memasdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbahas beberapsaddddddddddddda teknik caching, load balancing, serta optimasi query database untuk meningkatkan performa layanan berbasis web.",
+    "category": "Technology",
+    "status": "publish"
+}
+
+###
