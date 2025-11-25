@@ -1,7 +1,5 @@
 package model
 
-import "time"
-
 type CustomerResponse struct {
 	ID            int    `json:"id"`
 	NationalityID int    `json:"nationality_id"`
@@ -21,11 +19,11 @@ type CustomerWithFamilyResponse struct {
 	Family        []*FamilyListResponse `json:"family"`
 }
 type CreateCustomerRequest struct {
-	NationalityID int       `json:"nationality_id" validate:"required"`
-	Name          string    `json:"name" validate:"required,min=3"`
-	Dob           time.Time `json:"dob" validate:"required"`
-	PhoneNumber   string    `json:"phone_number" validate:"min=14"`
-	Email         string    `json:"email" validate:"email"`
+	NationalityID int    `json:"nationality_id" validate:"required"`
+	Name          string `json:"name" validate:"required,min=3"`
+	Dob           string `json:"dob" validate:"required"`
+	PhoneNumber   string `json:"phone_number" validate:"min=13"`
+	Email         string `json:"email" validate:"email"`
 }
 
 type UpdateCustomerRequest struct {

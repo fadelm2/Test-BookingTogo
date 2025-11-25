@@ -6,7 +6,7 @@ type Customer struct {
 	ID            int       `gorm:"column:cst_id;primaryKey;autoIncrement" json:"id"`
 	Name          string    `gorm:"column:cst_name;;not null" json:"name"`
 	Email         string    `gorm:"column:cst_email;" json:"address"`
-	Phone         string    `gorm:"column:cst_phone;" json:"phone"`
+	Phone         string    `gorm:"column:cst_phonenum;" json:"phone"`
 	DOB           time.Time `gorm:"column:cst_dob;" json:"dob"`
 	CreatedAt     time.Time `gorm:"column:created_at;autoCreateTime" json:"created_at"`
 	UpdatedAt     time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`

@@ -89,7 +89,7 @@ func (c *CustomerController) Delete(w http.ResponseWriter, r *http.Request) {
 func (c *CustomerController) Check(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	c.Log.Info("error creating comments")
+	c.Log.Info("gateway is running")
 
 	w.Write([]byte(`{"status":"ok"}`))
 }

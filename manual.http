@@ -3,10 +3,10 @@ POST http://localhost:8080/customer
 Accept: application/json
 
 {
-  "nationality_id": 62,
+  "nationality_id": 1,
   "name": "Bang Fadel",
   "dob": "1995-07-12",
-  "phone_number": "08123456789",
+  "phone_number": "0812345689434",
   "email": "fadel@example.com"
 }
 

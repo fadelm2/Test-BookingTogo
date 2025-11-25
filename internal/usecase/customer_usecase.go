@@ -42,9 +42,14 @@ func (c *CustomerUseCase) Create(ctx context.Context,
 		return nil, helper.NewBadRequest("Input is incorrect", err)
 	}
 
+	parsedDob, err := time.Parse("2006-01-02", request.Dob)
+	if err != nil {
+		c.Log.Error(err)
+	}
+
 	Customer := &entity.Customer{
 		Name:          request.Name,
-		DOB:           request.Dob, // harusnya open langsung default
+		DOB:           parsedDob, // harusnya open langsung default
 		NationalityId: request.NationalityID,
 		Email:         request.Email,
 		Phone:         request.PhoneNumber,
