@@ -8,21 +8,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type PostController struct {
-	UseCase *usecase.PostUseCase
+type CustomerController struct {
+	UseCase *usecase.CustomerUseCase
 	Log     *logrus.Logger
 }
 
-func NewPostController(useCase *usecase.PostUseCase, log *logrus.Logger) *PostController {
-	return &PostController{
+func NewCustomerController(useCase *usecase.CustomerUseCase, log *logrus.Logger) *CustomerController {
+	return &CustomerController{
 		UseCase: useCase,
 		Log:     log,
 	}
 }
 
-func (c *PostController) Create(ctx *fiber.Ctx) error {
+func (c *CustomerController) Create(ctx *.Ctx) error {
 
-	request := new(model.CreatePostRequest)
+	request := new(model.CreateCustomerRequest)
 	if err := ctx.BodyParser(request); err != nil {
 		c.Log.WithError(err).Error("error parsing request body")
 		return fiber.ErrBadRequest
@@ -30,16 +30,16 @@ func (c *PostController) Create(ctx *fiber.Ctx) error {
 
 	response, err := c.UseCase.Create(ctx.UserContext(), request)
 	if err != nil {
-		c.Log.WithError(err).Error("error creating Post")
+		c.Log.WithError(err).Error("error creating Customer")
 		return err
 	}
 
-	return ctx.JSON(model.WebResponse[*model.PostResponse]{Data: response})
+	return ctx.JSON(model.WebResponse[*model.CustomerResponse]{Data: response})
 }
 
-func (c *PostController) List(ctx *fiber.Ctx) error {
+func (c *CustomerController) List(ctx *fiber.Ctx) error {
 
-	request := &model.SearchPostRequest{
+	request := &model.SearchCustomerRequest{
 		Title:    ctx.Query("title", ""),
 		Content:  ctx.Query("name", ""),
 		Category: ctx.Query("category", ""),
@@ -50,7 +50,7 @@ func (c *PostController) List(ctx *fiber.Ctx) error {
 
 	responses, total, err := c.UseCase.Search(ctx.UserContext(), request)
 	if err != nil {
-		c.Log.WithError(err).Error("error searching Post")
+		c.Log.WithError(err).Error("error searching Customer")
 		return err
 	}
 
@@ -61,64 +61,64 @@ func (c *PostController) List(ctx *fiber.Ctx) error {
 		TotalPage: int64(math.Ceil(float64(total) / float64(request.Size))),
 	}
 
-	return ctx.JSON(model.WebResponse[[]model.PostResponse]{
+	return ctx.JSON(model.WebResponse[[]model.CustomerResponse]{
 		Data:   responses,
 		Paging: paging,
 	})
 }
 
-func (c *PostController) Get(ctx *fiber.Ctx) error {
+func (c *CustomerController) Get(ctx *fiber.Ctx) error {
 
-	request := &model.GetPostRequest{
-		ID: ctx.Params("PostId"),
+	request := &model.GetCustomerRequest{
+		ID: ctx.Params("CustomerId"),
 	}
 
 	response, err := c.UseCase.Get(ctx.UserContext(), request)
 	if err != nil {
-		c.Log.WithError(err).Error("error getting Post")
+		c.Log.WithError(err).Error("error getting Customer")
 		return err
 	}
 
-	return ctx.JSON(model.WebResponse[*model.PostResponse]{Data: response})
+	return ctx.JSON(model.WebResponse[*model.CustomerResponse]{Data: response})
 }
 
-func (c *PostController) Update(ctx *fiber.Ctx) error {
+func (c *CustomerController) Update(ctx *fiber.Ctx) error {
 
-	request := new(model.UpdatePostRequest)
+	request := new(model.UpdateCustomerRequest)
 	if err := ctx.BodyParser(request); err != nil {
 		c.Log.WithError(err).Error("error parsing request body")
 		return fiber.ErrBadRequest
 	}
 
-	request.ID = ctx.Params("PostId")
+	request.ID = ctx.Params("CustomerId")
 
 	response, err := c.UseCase.Update(ctx.UserContext(), request)
 	if err != nil {
-		c.Log.WithError(err).Error("error updating Post")
+		c.Log.WithError(err).Error("error updating Customer")
 		return err
 	}
 
-	return ctx.JSON(model.WebResponse[*model.PostResponse]{Data: response})
+	return ctx.JSON(model.WebResponse[*model.CustomerResponse]{Data: response})
 }
 
-func (c *PostController) Delete(ctx *fiber.Ctx) error {
-	PostId := ctx.Params("PostId")
+func (c *CustomerController) Delete(ctx *fiber.Ctx) error {
+	CustomerId := ctx.Params("CustomerId")
 
-	request := &model.DeletePostRequest{
-		ID: PostId,
+	request := &model.DeleteCustomerRequest{
+		ID: CustomerId,
 	}
 
 	if err := c.UseCase.Delete(ctx.UserContext(), request); err != nil {
-		c.Log.WithError(err).Error("error deleting Post")
+		c.Log.WithError(err).Error("error deleting Customer")
 		return err
 	}
 
 	return ctx.JSON(model.WebResponse[bool]{Data: true})
 }
 
-func (c *PostController) FindAllPost(ctx *fiber.Ctx) error {
+func (c *CustomerController) FindAllCustomer(ctx *fiber.Ctx) error {
 
-	request := &model.AllPostRequest{
+	request := &model.AllCustomerRequest{
 		ID: ctx.Query("id", ""),
 	}
 
@@ -128,7 +128,7 @@ func (c *PostController) FindAllPost(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.JSON(model.WebResponse[[]model.PostResponse]{
+	return ctx.JSON(model.WebResponse[[]model.CustomerResponse]{
 		Data: responses,
 	})
 }
