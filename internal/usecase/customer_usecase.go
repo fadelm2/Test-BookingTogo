@@ -11,27 +11,27 @@ import (
 	"gorm.io/gorm"
 )
 
-type PostUseCase struct {
-	DB             *gorm.DB
-	Log            *logrus.Logger
-	Validate       *validator.Validate
-	PostRepository *repository.PostsRepository
+type CustomerUseCase struct {
+	DB                 *gorm.DB
+	Log                *logrus.Logger
+	Validate           *validator.Validate
+	CustomerRepository *repository.CustomerRepository
 }
 
-func NewPostUseCase(db *gorm.DB,
+func NewCustomerUseCase(db *gorm.DB,
 	logger *logrus.Logger,
 	validate *validator.Validate,
-	PostRepository *repository.PostsRepository) *PostUseCase {
-	return &PostUseCase{
-		DB:             db,
-		Log:            logger,
-		Validate:       validate,
-		PostRepository: PostRepository,
+	CustomerRepository *repository.CustomerRepository) *CustomerUseCase {
+	return &CustomerUseCase{
+		DB:                 db,
+		Log:                logger,
+		Validate:           validate,
+		CustomerRepository: CustomerRepository,
 	}
 }
 
-func (c *PostUseCase) Create(ctx context.Context,
-	request *model.CreatePostRequest) (*model.PostResponse, error) {
+func (c *CustomerUseCase) Create(ctx context.Context,
+	request *model.CreateCustomerRequest) (*model.CustomerResponse, error) {
 	tx := c.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
@@ -40,35 +40,35 @@ func (c *PostUseCase) Create(ctx context.Context,
 		return nil, fiber.ErrBadRequest
 	}
 
-	Post := &entity.Post{
+	Customer := &entity.Customer{
 		Title:    request.Title,
 		Content:  request.Content, // harusnya open langsung default
 		Category: request.Category,
 		Status:   request.Status,
 	}
 
-	if err := c.PostRepository.Create(tx, Post); err != nil {
-		c.Log.WithError(err).Error("error creating Post")
+	if err := c.CustomerRepository.Create(tx, Customer); err != nil {
+		c.Log.WithError(err).Error("error creating Customer")
 		return nil, fiber.ErrInternalServerError
 
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		c.Log.WithError(err).Error("error creating Post")
+		c.Log.WithError(err).Error("error creating Customer")
 		return nil, fiber.ErrInternalServerError
 	}
 
-	return converter.PostToResponse(Post), nil
+	return converter.CustomerToResponse(Customer), nil
 
 }
 
-func (c *PostUseCase) Update(ctx context.Context,
-	request *model.UpdatePostRequest) (*model.PostResponse, error) {
+func (c *CustomerUseCase) Update(ctx context.Context,
+	request *model.UpdateCustomerRequest) (*model.CustomerResponse, error) {
 	tx := c.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
-	post := new(entity.Post)
-	if err := c.PostRepository.FindById(tx, post, request.ID); err != nil {
+	Customer := new(entity.Customer)
+	if err := c.CustomerRepository.FindById(tx, Customer, request.ID); err != nil {
 		c.Log.WithError(err).Error("error getting contact")
 		return nil, fiber.ErrNotFound
 	}
@@ -78,37 +78,37 @@ func (c *PostUseCase) Update(ctx context.Context,
 	}
 
 	if request.Title != "" {
-		post.Title = request.Title
+		Customer.Title = request.Title
 	}
 
 	if request.Content != "" {
-		post.Content = request.Content
+		Customer.Content = request.Content
 	}
 
 	if request.Category != "" {
-		post.Category = request.Category
+		Customer.Category = request.Category
 	}
 
 	if request.Status != "" {
-		post.Status = request.Status
+		Customer.Status = request.Status
 	}
 
-	if err := c.PostRepository.Update(tx, post); err != nil {
-		c.Log.WithError(err).Error("error Update Post")
+	if err := c.CustomerRepository.Update(tx, Customer); err != nil {
+		c.Log.WithError(err).Error("error Update Customer")
 		return nil, fiber.ErrInternalServerError
 
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		c.Log.WithError(err).Error("error Update Post")
+		c.Log.WithError(err).Error("error Update Customer")
 		return nil, fiber.ErrInternalServerError
 	}
 
-	return converter.PostToResponse(post), nil
+	return converter.CustomerToResponse(Customer), nil
 
 }
 
-func (c *PostUseCase) Get(ctx context.Context, request *model.GetPostRequest) (*model.PostResponse, error) {
+func (c *CustomerUseCase) Get(ctx context.Context, request *model.GetCustomerRequest) (*model.CustomerResponse, error) {
 	tx := c.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
@@ -117,21 +117,21 @@ func (c *PostUseCase) Get(ctx context.Context, request *model.GetPostRequest) (*
 		return nil, fiber.ErrBadRequest
 	}
 
-	post := new(entity.Post)
-	if err := c.PostRepository.FindById(tx, post, request.ID); err != nil {
-		c.Log.WithError(err).Error("error getting Post")
+	Customer := new(entity.Customer)
+	if err := c.CustomerRepository.FindById(tx, Customer, request.ID); err != nil {
+		c.Log.WithError(err).Error("error getting Customer")
 		return nil, fiber.ErrNotFound
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		c.Log.WithError(err).Error("error getting Post")
+		c.Log.WithError(err).Error("error getting Customer")
 		return nil, fiber.ErrInternalServerError
 	}
 
-	return converter.PostToResponse(post), nil
+	return converter.CustomerToResponse(Customer), nil
 }
 
-func (c *PostUseCase) Delete(ctx context.Context, request *model.DeletePostRequest) error {
+func (c *CustomerUseCase) Delete(ctx context.Context, request *model.DeleteCustomerRequest) error {
 	tx := c.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
@@ -140,26 +140,26 @@ func (c *PostUseCase) Delete(ctx context.Context, request *model.DeletePostReque
 		return fiber.ErrBadRequest
 	}
 
-	post := new(entity.Post)
-	if err := c.PostRepository.FindById(tx, post, request.ID); err != nil {
-		c.Log.WithError(err).Error("error getting Post")
+	Customer := new(entity.Customer)
+	if err := c.CustomerRepository.FindById(tx, Customer, request.ID); err != nil {
+		c.Log.WithError(err).Error("error getting Customer")
 		return fiber.ErrNotFound
 	}
 
-	if err := c.PostRepository.Delete(tx, post); err != nil {
-		c.Log.WithError(err).Error("error deleting Post")
+	if err := c.CustomerRepository.Delete(tx, Customer); err != nil {
+		c.Log.WithError(err).Error("error deleting Customer")
 		return fiber.ErrInternalServerError
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		c.Log.WithError(err).Error("error deleting Post")
-		return fiber.ErrInternalServerError
+		c.Log.WithError(err).Error("error deleting Customer")
+		return http.ErrInternalServerError
 	}
 
 	return nil
 }
 
-func (c *PostUseCase) Search(ctx context.Context, request *model.SearchPostRequest) ([]model.PostResponse, int64, error) {
+func (c *CustomerUseCase) Search(ctx context.Context, request *model.SearchCustomerRequest) ([]model.CustomerResponse, int64, error) {
 	tx := c.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
@@ -168,7 +168,7 @@ func (c *PostUseCase) Search(ctx context.Context, request *model.SearchPostReque
 		return nil, 0, fiber.ErrBadRequest
 	}
 
-	contacts, total, err := c.PostRepository.Search(tx, request)
+	contacts, total, err := c.CustomerRepository.Search(tx, request)
 	if err != nil {
 		c.Log.WithError(err).Error("error getting contacts")
 		return nil, 0, fiber.ErrInternalServerError
@@ -179,14 +179,14 @@ func (c *PostUseCase) Search(ctx context.Context, request *model.SearchPostReque
 		return nil, 0, fiber.ErrInternalServerError
 	}
 
-	responses := make([]model.PostResponse, len(contacts))
+	responses := make([]model.CustomerResponse, len(contacts))
 	for i, contact := range contacts {
-		responses[i] = *converter.PostToResponse(&contact)
+		responses[i] = *converter.CustomerToResponse(&contact)
 	}
 
 	return responses, total, nil
 }
-func (c *PostUseCase) FindAll(ctx context.Context, request *model.AllPostRequest) ([]model.PostResponse, error) {
+func (c *CustomerUseCase) FindAll(ctx context.Context, request *model.AllCustomerRequest) ([]model.CustomerResponse, error) {
 	tx := c.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
@@ -195,7 +195,7 @@ func (c *PostUseCase) FindAll(ctx context.Context, request *model.AllPostRequest
 		return nil, fiber.ErrBadRequest
 	}
 
-	Post, err := c.PostRepository.FindAll(tx)
+	Customer, err := c.CustomerRepository.FindAll(tx)
 	if err != nil {
 		c.Log.Warnf("Failed find all site : %+v", err)
 		return nil, fiber.ErrInternalServerError
@@ -206,9 +206,9 @@ func (c *PostUseCase) FindAll(ctx context.Context, request *model.AllPostRequest
 		return nil, fiber.ErrInternalServerError
 	}
 
-	responses := make([]model.PostResponse, len(Post))
-	for i, localSite := range Post {
-		responses[i] = *converter.PostToResponse(&localSite)
+	responses := make([]model.CustomerResponse, len(Customer))
+	for i, localSite := range Customer {
+		responses[i] = *converter.CustomerToResponse(&localSite)
 	}
 
 	return responses, nil
