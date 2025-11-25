@@ -1,11 +1,13 @@
 package http
 
 import (
+	"encoding/json"
+	"github.com/bookingtogo/internal/helper"
 	"github.com/bookingtogo/internal/model"
 	"github.com/bookingtogo/internal/usecase"
-	"math"
-
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"net/http"
 )
 
 type CustomerController struct {
@@ -20,115 +22,74 @@ func NewCustomerController(useCase *usecase.CustomerUseCase, log *logrus.Logger)
 	}
 }
 
-func (c *CustomerController) Create(ctx *.Ctx) error {
-
+func (c *CustomerController) Create(w http.ResponseWriter, r *http.Request) {
 	request := new(model.CreateCustomerRequest)
-	if err := ctx.BodyParser(request); err != nil {
-		c.Log.WithError(err).Error("error parsing request body")
-		return fiber.ErrBadRequest
+
+	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
+		helper.WriteJSON(w, helper.NewBadRequest("Invalid JSON format", err))
+		return
 	}
 
-	response, err := c.UseCase.Create(ctx.UserContext(), request)
+	result, err := c.UseCase.Create(r.Context(), request)
 	if err != nil {
-		c.Log.WithError(err).Error("error creating Customer")
-		return err
+		helper.WriteJSON(w, err)
+		return
 	}
 
-	return ctx.JSON(model.WebResponse[*model.CustomerResponse]{Data: response})
+	helper.WriteJSON(w, result)
 }
 
-func (c *CustomerController) List(ctx *fiber.Ctx) error {
-
-	request := &model.SearchCustomerRequest{
-		Title:    ctx.Query("title", ""),
-		Content:  ctx.Query("name", ""),
-		Category: ctx.Query("category", ""),
-		Status:   ctx.Query("status", ""),
-		Page:     ctx.QueryInt("page", 1),
-		Size:     ctx.QueryInt("size", 10),
-	}
-
-	responses, total, err := c.UseCase.Search(ctx.UserContext(), request)
-	if err != nil {
-		c.Log.WithError(err).Error("error searching Customer")
-		return err
-	}
-
-	paging := &model.PageMetadata{
-		Page:      request.Page,
-		Size:      request.Size,
-		TotalItem: total,
-		TotalPage: int64(math.Ceil(float64(total) / float64(request.Size))),
-	}
-
-	return ctx.JSON(model.WebResponse[[]model.CustomerResponse]{
-		Data:   responses,
-		Paging: paging,
-	})
-}
-
-func (c *CustomerController) Get(ctx *fiber.Ctx) error {
-
-	request := &model.GetCustomerRequest{
-		ID: ctx.Params("CustomerId"),
-	}
-
-	response, err := c.UseCase.Get(ctx.UserContext(), request)
-	if err != nil {
-		c.Log.WithError(err).Error("error getting Customer")
-		return err
-	}
-
-	return ctx.JSON(model.WebResponse[*model.CustomerResponse]{Data: response})
-}
-
-func (c *CustomerController) Update(ctx *fiber.Ctx) error {
-
+func (c *CustomerController) Update(w http.ResponseWriter, r *http.Request) {
 	request := new(model.UpdateCustomerRequest)
-	if err := ctx.BodyParser(request); err != nil {
-		c.Log.WithError(err).Error("error parsing request body")
-		return fiber.ErrBadRequest
+
+	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
+		helper.WriteJSON(w, helper.NewBadRequest("Invalid JSON format", err))
+		return
 	}
 
-	request.ID = ctx.Params("CustomerId")
-
-	response, err := c.UseCase.Update(ctx.UserContext(), request)
+	result, err := c.UseCase.Update(r.Context(), request)
 	if err != nil {
-		c.Log.WithError(err).Error("error updating Customer")
-		return err
+		helper.WriteJSON(w, err)
+		return
 	}
 
-	return ctx.JSON(model.WebResponse[*model.CustomerResponse]{Data: response})
+	helper.WriteJSON(w, result)
 }
 
-func (c *CustomerController) Delete(ctx *fiber.Ctx) error {
-	CustomerId := ctx.Params("CustomerId")
+func (h *CustomerController) GetCustomer(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	request := new(model.GetCustomerRequest)
 
-	request := &model.DeleteCustomerRequest{
-		ID: CustomerId,
+	request.ID, _ = helper.StringToInt(params["id"])
+
+	c, err := h.UseCase.Get(r.Context(), request)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
 	}
-
-	if err := c.UseCase.Delete(ctx.UserContext(), request); err != nil {
-		c.Log.WithError(err).Error("error deleting Customer")
-		return err
-	}
-
-	return ctx.JSON(model.WebResponse[bool]{Data: true})
+	json.NewEncoder(w).Encode(c)
 }
 
-func (c *CustomerController) FindAllCustomer(ctx *fiber.Ctx) error {
+func (c *CustomerController) Delete(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	request := new(model.DeleteCustomerRequest)
 
-	request := &model.AllCustomerRequest{
-		ID: ctx.Query("id", ""),
+	request.ID, _ = helper.StringToInt(params["id"])
+
+	if err := c.UseCase.Delete(r.Context(), request); err != nil {
+		helper.WriteJSON(w, err)
+		return
 	}
 
-	responses, err := c.UseCase.FindAll(ctx.UserContext(), request)
-	if err != nil {
-		c.Log.WithError(err).Warnf("Failed to get all Article")
-		return err
-	}
-
-	return ctx.JSON(model.WebResponse[[]model.CustomerResponse]{
-		Data: responses,
+	helper.WriteJSON(w, map[string]string{
+		"message": "Customer deleted successfully",
 	})
+}
+
+func (c *CustomerController) Check(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	c.Log.Info("error creating comments")
+
+	w.Write([]byte(`{"status":"ok"}`))
 }

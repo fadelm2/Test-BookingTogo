@@ -20,11 +20,13 @@ func NewDatabase(viper *viper.Viper, log *logrus.Logger) *gorm.DB {
 	idleConnection := viper.GetInt("database.pool.idle")
 	maxConnection := viper.GetInt("database.pool.max")
 	maxLifeTimeConnection := viper.GetInt("database.pool.lifetime")
+	sslmode := viper.GetString("database.sslmode")
+	timezone := viper.GetString("database.timezone")
 
 	// PostgreSQL DSN
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=%s",
-		host, username, password, database, port,
+		host, username, password, database, port, sslmode, timezone,
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{

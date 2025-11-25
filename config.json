@@ -4,7 +4,7 @@
   },
   "web": {
     "prefork": false,
-    "port": 8090
+    "port": 8080
   },
   "log": {
     "level": 6
@@ -13,8 +13,10 @@
     "username": "admin",
     "password": "123456",
     "host": "localhost",
-    "port": 3306,
+    "port": 5432,
     "name": "family_db",
+    "sslmode" : "disable",
+    "timezone": "Asia/Jakarta",
     "pool": {
       "idle": 10,
       "max": 100,

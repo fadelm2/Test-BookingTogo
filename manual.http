@@ -1,0 +1,17 @@
+### GET request to example server
+POST http://localhost:8080/customer
+Accept: application/json
+
+{
+  "nationality_id": 62,
+  "name": "Bang Fadel",
+  "dob": "1995-07-12",
+  "phone_number": "08123456789",
+  "email": "fadel@example.com"
+}
+
+###
+
+### GET request to example server
+GET http://localhost:8080/health
+###

@@ -14,7 +14,7 @@ import (
 
 type BootstrapConfig struct {
 	DB       *gorm.DB
-	App      *mux.Route
+	App      *mux.Router // ✔ benar
 	Log      *logrus.Logger
 	Validate *validator.Validate
 	Config   *viper.Viper
@@ -22,18 +22,18 @@ type BootstrapConfig struct {
 
 func Bootstrap(config *BootstrapConfig) {
 	// setup repositories
-	postRepository := repository.NewPostsRepository(config.Log)
+	customerRepository := repository.NewCustomerRepository(config.Log)
 
 	// setup Usecase
-	postUseCase := usecase.NewPostUseCase(config.DB, config.Log, config.Validate, postRepository)
+	customerUseCase := usecase.NewCustomerUseCase(config.DB, config.Log, config.Validate, customerRepository)
 
 	// setup Controlle
 
-	postController := http.NewPostController(postUseCase, config.Log)
+	customerController := http.NewCustomerController(customerUseCase, config.Log)
 
 	routeConfig := route.RouteConfig{
-		App:            config.App,
-		PostController: postController,
+		App:                config.App,
+		CustomerController: customerController,
 	}
 	routeConfig.Setup()
 

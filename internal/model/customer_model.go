@@ -38,11 +38,11 @@ type UpdateCustomerRequest struct {
 }
 
 type GetCustomerRequest struct {
-	ID string `json:"id" validate:"required"`
+	ID int `json:"-" validate:"required"`
 }
 
 type DeleteCustomerRequest struct {
-	ID string `json:"id" validate:"required"`
+	ID int `json:"-" validate:"required"`
 }
 
 type SearchCustomerRequest struct {
