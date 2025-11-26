@@ -6,8 +6,9 @@ import (
 )
 
 type RouteConfig struct {
-	App                *mux.Router
-	CustomerController *http.CustomerController
+	App                  *mux.Router
+	CustomerController   *http.CustomerController
+	FamilyListController *http.FamilyListController
 }
 
 func (c *RouteConfig) Setup() {
@@ -16,10 +17,12 @@ func (c *RouteConfig) Setup() {
 
 func (c *RouteConfig) SetupGuestRoute() {
 
-	c.App.HandleFunc("/customer", c.CustomerController.Create).Methods("POST")
-	c.App.HandleFunc("/customer", c.CustomerController.Update).Methods("PUT")
-	c.App.HandleFunc("/customer/{id}", c.CustomerController.GetCustomer).Methods("GET")
-	c.App.HandleFunc("/customer/{id}", c.CustomerController.Delete).Methods("DELETE")
-	c.App.HandleFunc("/health", c.CustomerController.Check).Methods("GET")
+	c.App.HandleFunc("/api/customer", c.CustomerController.Create).Methods("POST")
+	c.App.HandleFunc("/api/customer", c.CustomerController.Update).Methods("PUT")
+	c.App.HandleFunc("/api/customer/{id}", c.CustomerController.GetCustomer).Methods("GET")
+	c.App.HandleFunc("/api/customer/{id}", c.CustomerController.Delete).Methods("DELETE")
+	c.App.HandleFunc("/api/health", c.CustomerController.Check).Methods("GET")
+	c.App.HandleFunc("/api/customer/{id}/family", c.FamilyListController.Create).Methods("POST")
+	c.App.HandleFunc("/api/customer/{id}/family", c.FamilyListController.GetFamilyList).Methods("GET")
 
 }

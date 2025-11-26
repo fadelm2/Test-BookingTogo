@@ -67,7 +67,7 @@ func (h *CustomerController) GetCustomer(w http.ResponseWriter, r *http.Request)
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	json.NewEncoder(w).Encode(c)
+	helper.WriteJSON(w, c)
 }
 
 func (c *CustomerController) Delete(w http.ResponseWriter, r *http.Request) {

@@ -23,17 +23,21 @@ type BootstrapConfig struct {
 func Bootstrap(config *BootstrapConfig) {
 	// setup repositories
 	customerRepository := repository.NewCustomerRepository(config.Log)
+	familyListRepository := repository.NewFamilyListRepository(config.Log)
 
 	// setup Usecase
 	customerUseCase := usecase.NewCustomerUseCase(config.DB, config.Log, config.Validate, customerRepository)
+	familyListUseCase := usecase.NewFamilyListUseCase(config.DB, config.Log, config.Validate, familyListRepository, customerRepository)
 
 	// setup Controlle
 
 	customerController := http.NewCustomerController(customerUseCase, config.Log)
+	familyListController := http.NewFamilyListController(familyListUseCase, config.Log)
 
 	routeConfig := route.RouteConfig{
-		App:                config.App,
-		CustomerController: customerController,
+		App:                  config.App,
+		CustomerController:   customerController,
+		FamilyListController: familyListController,
 	}
 	routeConfig.Setup()
 

@@ -1,5 +1,5 @@
 ### GET request to example server
-POST http://localhost:8080/customer
+POST http://localhost:8080/api/customer
 Accept: application/json
 
 {
@@ -13,5 +13,24 @@ Accept: application/json
 ###
 
 ### GET request to example server
-GET http://localhost:8080/health
+GET http://localhost:8080/api/health
 ###
+### GET request to example server
+GET http://localhost:8080/api/customer/1
+Accept: application/json
+
+###
+
+### GET request to example server
+GET http://localhost:8080/api/customer/1/family
+###
+POST http://localhost:8080/api/customer/1/family
+Accept: application/json
+
+{
+  "nationality_id": 1,
+  "name": "Bang Fadel",
+  "dob": "1995-07-12",
+  "phone_number": "0812345689434",
+  "email": "fadel@example.com"
+}

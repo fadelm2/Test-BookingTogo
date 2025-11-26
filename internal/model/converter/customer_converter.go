@@ -17,17 +17,6 @@ func CustomerToResponse(c *entity.Customer) *model.CustomerResponse {
 	}
 }
 
-func FamilyListToResponse(f *entity.FamilyList) *model.FamilyListResponse {
-
-	return &model.FamilyListResponse{
-		ID:         f.ID,
-		CustomerID: f.CustomerID,
-		Relation:   f.Relation,
-		Name:       f.Name,
-		Dob:        f.Dob.Format("2006-01-02"),
-	}
-}
-
 func FamilyListToResponseList(list []entity.FamilyList) []*model.FamilyListResponse {
 	var result []*model.FamilyListResponse
 
