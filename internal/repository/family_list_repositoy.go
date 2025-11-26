@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"github.com/bookingtogo/internal/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -25,4 +26,14 @@ func (r *FamilyListRepository) FindAllFamily(db *gorm.DB, customerID string) ([]
 	}
 
 	return families, nil
+}
+
+func (r *FamilyListRepository) DeleteByID(db *gorm.DB, id int) error {
+	return db.Delete(&entity.FamilyList{}, id).Error
+}
+
+func (r *FamilyListRepository) DeleteByCustomerID(ctx context.Context, customerID int) error {
+	return r.DB.WithContext(ctx).
+		Where("cst_id = ?", customerID).
+		Delete(&entity.FamilyList{}).Error
 }

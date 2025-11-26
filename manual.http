@@ -22,15 +22,58 @@ Accept: application/json
 ###
 
 ### GET request to example server
-GET http://localhost:8080/api/customer/1/family
+GET http://localhost:8080/api/customer/7
 ###
-POST http://localhost:8080/api/customer/1/family
+POST http://localhost:8080/api/customer/
 Accept: application/json
 
-{
+
+{{
   "relation": "adek",
   "name": "Udinssdsada",
   "dob": "1995-08-12"
 }
 
 ###
+
+
+
+### GET Nationalities
+GET http://localhost:8080/api/nationalities
+Accept: application/json
+
+###
+
+
+### GET Nationalities
+GET http://localhost:8080/api/customer
+Accept: application/json
+###
+
+
+
+
+POST http://localhost:8080/api/customer
+Accept: application/json
+Content-Type: application/json
+
+
+{
+  "nationality_id": 1,
+  "name": "Budi Santoso",
+  "dob": "1990-05-20",
+  "phone_number": "081234567894343",
+  "email": "budi@gmail.com",
+  "families": [
+    {
+      "relation": "adik",
+      "name": "Udinssdsada",
+      "dob": "1995-08-12"
+    },
+    {
+      "relation": "kakak",
+      "name": "adadasdsadsasadaads",
+      "dob": "1988-03-10"
+    }
+  ]
+}
