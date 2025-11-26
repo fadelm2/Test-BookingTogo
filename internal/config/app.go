@@ -24,20 +24,23 @@ func Bootstrap(config *BootstrapConfig) {
 	// setup repositories
 	customerRepository := repository.NewCustomerRepository(config.Log)
 	familyListRepository := repository.NewFamilyListRepository(config.Log)
+	NationalityRepository := repository.NewNationalityRepository(config.Log)
 
 	// setup Usecase
-	customerUseCase := usecase.NewCustomerUseCase(config.DB, config.Log, config.Validate, customerRepository)
+	customerUseCase := usecase.NewCustomerUseCase(config.DB, config.Log, config.Validate, customerRepository, familyListRepository)
 	familyListUseCase := usecase.NewFamilyListUseCase(config.DB, config.Log, config.Validate, familyListRepository, customerRepository)
-
+	nationalitiesUsecase := usecase.NewNationalityUseCase(config.DB, config.Log, config.Validate, NationalityRepository)
 	// setup Controlle
 
 	customerController := http.NewCustomerController(customerUseCase, config.Log)
 	familyListController := http.NewFamilyListController(familyListUseCase, config.Log)
+	nationalitiesController := http.NewNationalityController(nationalitiesUsecase, config.Log)
 
 	routeConfig := route.RouteConfig{
-		App:                  config.App,
-		CustomerController:   customerController,
-		FamilyListController: familyListController,
+		App:                     config.App,
+		CustomerController:      customerController,
+		FamilyListController:    familyListController,
+		NationalitiesController: nationalitiesController,
 	}
 	routeConfig.Setup()
 

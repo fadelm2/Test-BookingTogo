@@ -18,7 +18,7 @@ type UpdateNationalityRequest struct {
 }
 
 type GetNationalityRequest struct {
-	ID string `json:"id" validate:"required"`
+	ID string `json:"-" validate:""`
 }
 
 type DeleteNationalityRequest struct {

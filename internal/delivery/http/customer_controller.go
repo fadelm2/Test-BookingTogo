@@ -93,3 +93,15 @@ func (c *CustomerController) Check(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte(`{"status":"ok"}`))
 }
+
+func (h *CustomerController) FindAll(w http.ResponseWriter, r *http.Request) {
+	request := new(model.AllCustomerRequest)
+
+	h.Log.Info("Request All get Customers")
+	result, err := h.UseCase.FindAll(r.Context(), request)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	helper.WriteJSON(w, result)
+}

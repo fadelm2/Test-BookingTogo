@@ -49,7 +49,7 @@ func (c *FamilyListController) Create(w http.ResponseWriter, r *http.Request) {
 	helper.WriteJSON(w, result)
 }
 
-func (h *FamilyListController) GetFamilyList(w http.ResponseWriter, r *http.Request) {
+func (h *FamilyListController) GetList(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	request := new(model.GetFamilyListRequest)
 

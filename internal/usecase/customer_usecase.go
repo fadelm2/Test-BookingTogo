@@ -14,21 +14,24 @@ import (
 )
 
 type CustomerUseCase struct {
-	DB                 *gorm.DB
-	Log                *logrus.Logger
-	Validate           *validator.Validate
-	CustomerRepository *repository.CustomerRepository
+	DB                   *gorm.DB
+	Log                  *logrus.Logger
+	Validate             *validator.Validate
+	CustomerRepository   *repository.CustomerRepository
+	FamilyListRepository *repository.FamilyListRepository
 }
 
 func NewCustomerUseCase(db *gorm.DB,
 	logger *logrus.Logger,
 	validate *validator.Validate,
-	CustomerRepository *repository.CustomerRepository) *CustomerUseCase {
+	CustomerRepository *repository.CustomerRepository,
+	FamilyListRepository *repository.FamilyListRepository) *CustomerUseCase {
 	return &CustomerUseCase{
-		DB:                 db,
-		Log:                logger,
-		Validate:           validate,
-		CustomerRepository: CustomerRepository,
+		DB:                   db,
+		Log:                  logger,
+		Validate:             validate,
+		CustomerRepository:   CustomerRepository,
+		FamilyListRepository: FamilyListRepository,
 	}
 }
 
@@ -170,57 +173,245 @@ func (c *CustomerUseCase) Delete(ctx context.Context, request *model.DeleteCusto
 	return nil
 }
 
-//func (c *CustomerUseCase) Search(ctx context.Context, request *model.SearchCustomerRequest) ([]model.CustomerResponse, int64, error) {
-//	tx := c.DB.WithContext(ctx).Begin()
-//	defer tx.Rollback()
-//
-//	if err := c.Validate.Struct(request); err != nil {
-//		c.Log.WithError(err).Error("error validating request body")
-//		return nil, 0, helper.NewBadRequest("Input ada yang salah", err)
-//	}
-//
-//	contacts, total, err := c.CustomerRepository.Search(tx, request)
-//	if err != nil {
-//		c.Log.WithError(err).Error("error getting contacts")
-//		return nil, 0, helper.NewInternal("Internal service error")
-//	}
-//
-//	if err := tx.Commit().Error; err != nil {
-//		c.Log.WithError(err).Error("error getting contacts")
-//		return nil, 0, helper.NewInternal("Internal service error")
-//	}
-//
-//	responses := make([]model.CustomerResponse, len(contacts))
-//	for i, contact := range contacts {
-//		responses[i] = *converter.CustomerToResponse(&contact)
-//	}
-//
-//	return responses, total, nil
-//}
-//func (c *CustomerUseCase) FindAll(ctx context.Context, request *model.AllCustomerRequest) ([]model.CustomerResponse, error) {
-//	tx := c.DB.WithContext(ctx).Begin()
-//	defer tx.Rollback()
-//
-//	if err := c.Validate.Struct(request); err != nil {
-//		c.Log.WithError(err).Error("error validating request body")
-//		return nil, helper.NewBadRequest("Input ada yang salah", err)
-//	}
-//
-//	Customer, err := c.CustomerRepository.FindAll(tx)
-//	if err != nil {
-//		c.Log.Warnf("Failed find all site : %+v", err)
-//		return nil, helper.NewInternal("Internal service error")
-//	}
-//
-//	if err := tx.Commit().Error; err != nil {
-//		c.Log.Warnf("Failed commit transaction : %+v", err)
-//		return nil, helper.NewInternal("Internal service error")
-//	}
-//
-//	responses := make([]model.CustomerResponse, len(Customer))
-//	for i, localSite := range Customer {
-//		responses[i] = *converter.CustomerToResponse(&localSite)
-//	}
-//
-//	return responses, nil
-//}
+func (c *CustomerUseCase) FindAll(ctx context.Context, request *model.AllCustomerRequest) ([]model.CustomerResponse, error) {
+	tx := c.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	if err := c.Validate.Struct(request); err != nil {
+		c.Log.WithError(err).Error("error validating request body")
+		return nil, helper.NewBadRequest("Input ada yang salah", err)
+	}
+
+	Customers, err := c.CustomerRepository.FindAll(tx)
+	if err != nil {
+		c.Log.Warnf("Failed find all user : %+v", err)
+		return nil, helper.NewInternal("Internal service error")
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		c.Log.Warnf("Failed commit transaction : %+v", err)
+		return nil, helper.NewInternal("Internal service error")
+	}
+	// Cek kalau data kosong
+	if len(Customers) == 0 {
+		tx.Rollback()
+		return nil, helper.NewNotFound("nationality data is currently empty.") // atau helper lain sesuai kebutuhan
+	}
+
+	responses := make([]model.CustomerResponse, len(Customers))
+	for i, customer := range Customers {
+		responses[i] = *converter.CustomerToResponse(&customer)
+	}
+
+	return responses, nil
+}
+
+func (c *CustomerUseCase) CreateWithFamily(
+	ctx context.Context,
+	request *model.CreateCustomerWithFamilyRequest,
+) (*model.CustomerWithFamilyResponse, error) {
+
+	tx := c.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	// 1. VALIDATION
+	if err := c.Validate.Struct(request); err != nil {
+		c.Log.WithError(err).Error("error validating request body")
+		return nil, helper.NewBadRequest("Input is incorrect", err)
+	}
+
+	// 2. PARSE DOB
+	parsedDob, err := time.Parse("2006-01-02", request.Dob)
+	if err != nil {
+		c.Log.WithError(err).Error("invalid date format")
+		return nil, helper.NewBadRequest("DOB must be in format YYYY-MM-DD", err)
+	}
+
+	// 3. CREATE CUSTOMER ENTITY
+	customer := &entity.Customer{
+		Name:          request.Name,
+		DOB:           parsedDob,
+		NationalityId: request.NationalityID,
+		Email:         request.Email,
+		Phone:         request.PhoneNumber,
+	}
+
+	// 4. INSERT CUSTOMER
+	if err := c.CustomerRepository.Create(tx, customer); err != nil {
+		c.Log.WithError(err).Error("failed to create customer")
+		return nil, helper.NewInternal("Internal service error")
+	}
+
+	// 5. INSERT FAMILY LIST (LOOP)
+	var familyEntities []entity.FamilyList
+
+	for _, famReq := range request.FamilyRequest {
+
+		// Optional: validasi masing² family
+		if err := c.Validate.Struct(famReq); err != nil {
+			return nil, helper.NewBadRequest("Family input invalid", err)
+		}
+
+		if err != nil {
+			return nil, helper.NewBadRequest("Family DOB format invalid", err)
+		}
+
+		family := entity.FamilyList{
+			CustomerID: customer.ID,
+			Name:       famReq.Name,
+			Relation:   famReq.Relation,
+			Dob:        famReq.Dob,
+		}
+
+		if err := c.FamilyListRepository.Create(tx, &family); err != nil {
+			c.Log.WithError(err).Error("failed to create family")
+			return nil, helper.NewInternal("Internal service error")
+		}
+
+		familyEntities = append(familyEntities, family)
+	}
+
+	// 6. COMMIT TRANSACTION
+	if err := tx.Commit().Error; err != nil {
+		c.Log.WithError(err).Error("failed commit")
+		return nil, helper.NewInternal("Internal service error")
+	}
+
+	// 7. RETURN RESPONSE (gabungan customer + family)
+	return converter.CustomerWithFamilyToResponse(customer, familyEntities), nil
+}
+
+func (c *CustomerUseCase) UpdateWithFamily(
+	ctx context.Context,
+	customerID int,
+	request *model.UpdateCustomerWithFamilyRequest,
+) (*model.CustomerWithFamilyResponse, error) {
+
+	tx := c.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	// 1. VALIDATION
+	if err := c.Validate.Struct(request); err != nil {
+		c.Log.WithError(err).Error("error validating request body")
+		return nil, helper.NewBadRequest("Input is incorrect", err)
+	}
+
+	// 2. CHECK CUSTOMER EXISTS
+	customer, err := c.CustomerRepository.FindById(tx, customerID)
+	if err != nil || customer == nil {
+		return nil, helper.NewNotFound("Customer not found")
+	}
+
+	// 3. PARSE DOB
+	parsedDob, err := time.Parse("2006-01-02", request.Dob)
+	if err != nil {
+		c.Log.WithError(err).Error("invalid date format")
+		return nil, helper.NewBadRequest("DOB must be YYYY-MM-DD", err)
+	}
+
+	// 4. UPDATE CUSTOMER DATA
+	// 4. UPDATE CUSTOMER DATA
+
+	if request.Name != nil {
+		customer.Name = *request.Name
+	}
+
+	if request.Dob != nil {
+		parsedDob, err := time.Parse("2006-01-02", *request.Dob)
+		if err != nil {
+			return nil, helper.NewBadRequest("DOB must be YYYY-MM-DD", err)
+		}
+		customer.DOB = parsedDob
+	}
+
+	if request.NationalityID != nil {
+		customer.NationalityId = *request.NationalityID
+	}
+
+	if request.Email != nil {
+		customer.Email = *request.Email
+	}
+
+	if request.PhoneNumber != nil {
+		customer.Phone = *request.PhoneNumber
+	}
+
+	if err := c.CustomerRepository.Update(tx, customer); err != nil {
+		c.Log.WithError(err).Error("failed to update customer")
+		return nil, helper.NewInternal("Internal service error")
+	}
+
+	// ====================================
+	// 5. HANDLE FAMILY LIST UPDATE
+	// ====================================
+
+	// Ambil data family yang sudah ada
+	existingFamilies, _ := c.FamilyListRepository.FindByCustomerID(tx, customerID)
+	existingMap := map[int]entity.FamilyList{}
+	for _, f := range existingFamilies {
+		existingMap[f.ID] = f
+	}
+
+	var updatedFamilies []entity.FamilyList
+
+	for _, famReq := range request.FamilyRequest {
+
+		// Validasi input tiap family
+		if err := c.Validate.Struct(famReq); err != nil {
+			return nil, helper.NewBadRequest("Family input invalid", err)
+		}
+
+		// CASE 1: Update family (ada ID)
+		if famReq.ID != 0 {
+			famEntity, exists := existingMap[famReq.ID]
+			if !exists {
+				return nil, helper.NewBadRequest("Family ID not found", nil)
+			}
+
+			// Update value
+			famEntity.Name = famReq.Name
+			famEntity.Relation = famReq.Relation
+			famEntity.Dob = famReq.Dob
+
+			if err := c.FamilyListRepository.Update(tx, &famEntity); err != nil {
+				return nil, helper.NewInternal("Failed updating family")
+			}
+
+			updatedFamilies = append(updatedFamilies, famEntity)
+			delete(existingMap, famReq.ID) // tandai sebagai tidak dihapus
+			continue
+		}
+
+		// CASE 2: Insert family baru (tanpa ID)
+		newFam := entity.FamilyList{
+			CustomerID: customer.ID,
+			Name:       famReq.Name,
+			Relation:   famReq.Relation,
+			Dob:        famReq.Dob,
+		}
+
+		if err := c.FamilyListRepository.Create(tx, &newFam); err != nil {
+			return nil, helper.NewInternal("Failed creating family")
+		}
+
+		updatedFamilies = append(updatedFamilies, newFam)
+	}
+
+	// CASE 3: Delete family yang tidak ada di permintaan (opsional)
+	for _, famToDelete := range existingMap {
+		if err := c.FamilyListRepository.Delete(tx, famToDelete.ID); err != nil {
+			return nil, helper.NewInternal("Failed deleting family")
+		}
+	}
+
+	// ====================================
+	// 6. COMMIT
+	// ====================================
+	if err := tx.Commit().Error; err != nil {
+		c.Log.WithError(err).Error("failed commit")
+		return nil, helper.NewInternal("Internal service error")
+	}
+
+	// 7. RETURN RESPONSE
+	return converter.CustomerWithFamilyToResponse(customer, updatedFamilies), nil
+}

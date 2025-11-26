@@ -34,3 +34,17 @@ Accept: application/json
 }
 
 ###
+
+
+
+### GET Nationalities
+GET http://localhost:8080/api/nationalities
+Accept: application/json
+
+###
+
+
+### GET Nationalities
+GET http://localhost:8080/api/customer
+Accept: application/json
+###

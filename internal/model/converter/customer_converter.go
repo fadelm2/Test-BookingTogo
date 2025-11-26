@@ -39,3 +39,35 @@ func CustomerToResponseWithFamily(c *entity.Customer) *model.CustomerWithFamilyR
 		Family:        FamilyListToResponseList(c.Family),
 	}
 }
+
+func CustomerWithFamilyToResponse(
+	customer *entity.Customer,
+	family []entity.FamilyList,
+) *model.CustomerWithFamilyResponse {
+
+	response := &model.CustomerWithFamilyResponse{
+		ID:            customer.ID,
+		NationalityID: customer.NationalityId,
+		Name:          customer.Name,
+		Dob:           customer.DOB.Format("2006-01-02"),
+		PhoneNumber:   customer.Phone,
+		Email:         customer.Email,
+	}
+
+	// convert family list
+	var familyResponse []*model.FamilyListResponse
+
+	for _, f := range family {
+		familyResponse = append(familyResponse, &model.FamilyListResponse{
+			ID:         f.ID,
+			CustomerID: f.CustomerID,
+			Relation:   f.Relation,
+			Name:       f.Name,
+			Dob:        f.Dob,
+		})
+	}
+
+	response.Family = familyResponse
+
+	return response
+}

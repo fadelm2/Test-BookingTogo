@@ -25,6 +25,14 @@ type CreateCustomerRequest struct {
 	PhoneNumber   string `json:"phone_number" validate:"min=13"`
 	Email         string `json:"email" validate:"email"`
 }
+type CreateCustomerWithFamilyRequest struct {
+	NationalityID int    `json:"nationality_id" validate:"required"`
+	Name          string `json:"name" validate:"required,min=3"`
+	Dob           string `json:"dob" validate:"required"`
+	PhoneNumber   string `json:"phone_number" validate:"min=13"`
+	Email         string `json:"email" validate:"email"`
+	FamilyRequest []CreateFamilyListRequest
+}
 
 type UpdateCustomerRequest struct {
 	ID            string  `json:"-" validate:"required"`
@@ -59,4 +67,20 @@ type AllCustomerRequest struct {
 	Name          string `json:"name"`
 	PhoneNumber   string `json:"phone_number"`
 	Email         string `json:"email"`
+}
+
+type UpdateCustomerWithFamilyRequest struct {
+	Name          *string               `json:"name"`
+	Dob           *string               `json:"dob"`
+	Email         *string               `json:"email"`
+	PhoneNumber   *string               `json:"phone_number"`
+	NationalityID *int                  `json:"nationality_id"`
+	FamilyRequest []UpdateFamilyRequest `json:"family_request"`
+}
+
+type UpdateFamilyRequest struct {
+	ID       *int    `json:"id"` // nil = create new
+	Name     *string `json:"name"`
+	Relation *string `json:"relation"`
+	Dob      *string `json:"dob"`
 }
