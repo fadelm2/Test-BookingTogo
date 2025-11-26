@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"strconv"
 )
 
 type CustomerController struct {
@@ -103,5 +104,72 @@ func (h *CustomerController) FindAll(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
+	helper.WriteJSON(w, result)
+}
+
+func (h *CustomerController) CreateWithFamily(w http.ResponseWriter, r *http.Request) {
+	req := new(model.CreateCustomerWithFamilyRequest)
+
+	// Decode JSON sekali saja
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	h.Log.Info("Request Create Customer With Family", req)
+
+	result, err := h.UseCase.CreateWithFamily(r.Context(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	helper.WriteJSON(w, result)
+}
+
+func (h *CustomerController) UpdateWithFamily(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, err := strconv.Atoi(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid customer ID", http.StatusBadRequest)
+		return
+	}
+
+	req := new(model.UpdateCustomerWithFamilyRequest)
+	req.ID = strconv.Itoa(id)
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	h.Log.WithField("customer_id", id).Info("Request Update Customer With Family")
+
+	result, err := h.UseCase.UpdateWithFamily(r.Context(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	helper.WriteJSON(w, result)
+}
+
+func (h *CustomerController) GetCustomerWithFamily(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, err := strconv.Atoi(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid customer ID", http.StatusBadRequest)
+		return
+	}
+	req := new(model.GetFamilyListRequest)
+	req.ID = strconv.Itoa(id)
+
+	h.Log.WithField("customer_id", id).Info("Request Get Customer With Family")
+
+	result, err := h.UseCase.GetCustomerWithFamily(r.Context(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
 	helper.WriteJSON(w, result)
 }

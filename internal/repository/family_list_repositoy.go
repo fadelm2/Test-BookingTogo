@@ -26,3 +26,7 @@ func (r *FamilyListRepository) FindAllFamily(db *gorm.DB, customerID string) ([]
 
 	return families, nil
 }
+
+func (r *FamilyListRepository) DeleteByID(db *gorm.DB, id int) error {
+	return db.Delete(&entity.FamilyList{}, id).Error
+}

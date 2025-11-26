@@ -9,10 +9,10 @@ type FamilyListResponse struct {
 }
 
 type CreateFamilyListRequest struct {
-	CustomerID int    `json:"-" validate:"required"`
-	Relation   string `json:"relation" validate:"required,min=3"`
-	Name       string `json:"name" validate:"required,min=3"`
-	Dob        string `json:"dob" validate:"required"`
+	CustomerID int    `json:"-" validate:""`
+	Relation   string `json:"relation" validate:""`
+	Name       string `json:"name" validate:""`
+	Dob        string `json:"dob" validate:""`
 }
 
 type UpdateFamilyListRequest struct {

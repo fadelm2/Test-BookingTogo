@@ -10,6 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"strconv"
 	"time"
 )
 
@@ -244,7 +245,7 @@ func (c *CustomerUseCase) CreateWithFamily(
 
 	// 5. INSERT FAMILY LIST (LOOP)
 	var familyEntities []entity.FamilyList
-
+	c.Log.Debugf("berikut data request :", request.FamilyRequest)
 	for _, famReq := range request.FamilyRequest {
 
 		// Optional: validasi masing² family
@@ -283,7 +284,6 @@ func (c *CustomerUseCase) CreateWithFamily(
 
 func (c *CustomerUseCase) UpdateWithFamily(
 	ctx context.Context,
-	customerID int,
 	request *model.UpdateCustomerWithFamilyRequest,
 ) (*model.CustomerWithFamilyResponse, error) {
 
@@ -297,23 +297,14 @@ func (c *CustomerUseCase) UpdateWithFamily(
 	}
 
 	// 2. CHECK CUSTOMER EXISTS
-	customer, err := c.CustomerRepository.FindById(tx, customerID)
-	if err != nil || customer == nil {
-		return nil, helper.NewNotFound("Customer not found")
+	Customer := new(entity.Customer)
+	if err := c.CustomerRepository.FindById(tx, Customer, request.ID); err != nil {
+		c.Log.WithError(err).Error("error getting Customer")
+		return nil, helper.NewNotFound("customer id not found")
 	}
-
-	// 3. PARSE DOB
-	parsedDob, err := time.Parse("2006-01-02", request.Dob)
-	if err != nil {
-		c.Log.WithError(err).Error("invalid date format")
-		return nil, helper.NewBadRequest("DOB must be YYYY-MM-DD", err)
-	}
-
-	// 4. UPDATE CUSTOMER DATA
-	// 4. UPDATE CUSTOMER DATA
 
 	if request.Name != nil {
-		customer.Name = *request.Name
+		Customer.Name = *request.Name
 	}
 
 	if request.Dob != nil {
@@ -321,22 +312,18 @@ func (c *CustomerUseCase) UpdateWithFamily(
 		if err != nil {
 			return nil, helper.NewBadRequest("DOB must be YYYY-MM-DD", err)
 		}
-		customer.DOB = parsedDob
-	}
-
-	if request.NationalityID != nil {
-		customer.NationalityId = *request.NationalityID
+		Customer.DOB = parsedDob
 	}
 
 	if request.Email != nil {
-		customer.Email = *request.Email
+		Customer.Email = *request.Email
 	}
 
 	if request.PhoneNumber != nil {
-		customer.Phone = *request.PhoneNumber
+		Customer.Phone = *request.PhoneNumber
 	}
 
-	if err := c.CustomerRepository.Update(tx, customer); err != nil {
+	if err := c.CustomerRepository.Update(tx, Customer); err != nil {
 		c.Log.WithError(err).Error("failed to update customer")
 		return nil, helper.NewInternal("Internal service error")
 	}
@@ -346,7 +333,14 @@ func (c *CustomerUseCase) UpdateWithFamily(
 	// ====================================
 
 	// Ambil data family yang sudah ada
-	existingFamilies, _ := c.FamilyListRepository.FindByCustomerID(tx, customerID)
+
+	existingFamilies, err := c.FamilyListRepository.FindAllFamily(tx, strconv.Itoa(Customer.ID))
+	if err != nil {
+		// Error dari DB → return 500
+		c.Log.WithError(err).Error("error fetching family list")
+		return nil, helper.NewInternal("failed to get family data")
+	}
+
 	existingMap := map[int]entity.FamilyList{}
 	for _, f := range existingFamilies {
 		existingMap[f.ID] = f
@@ -384,7 +378,7 @@ func (c *CustomerUseCase) UpdateWithFamily(
 
 		// CASE 2: Insert family baru (tanpa ID)
 		newFam := entity.FamilyList{
-			CustomerID: customer.ID,
+			CustomerID: Customer.ID,
 			Name:       famReq.Name,
 			Relation:   famReq.Relation,
 			Dob:        famReq.Dob,
@@ -399,7 +393,7 @@ func (c *CustomerUseCase) UpdateWithFamily(
 
 	// CASE 3: Delete family yang tidak ada di permintaan (opsional)
 	for _, famToDelete := range existingMap {
-		if err := c.FamilyListRepository.Delete(tx, famToDelete.ID); err != nil {
+		if err := c.FamilyListRepository.DeleteByID(tx, famToDelete.ID); err != nil {
 			return nil, helper.NewInternal("Failed deleting family")
 		}
 	}
@@ -413,5 +407,39 @@ func (c *CustomerUseCase) UpdateWithFamily(
 	}
 
 	// 7. RETURN RESPONSE
-	return converter.CustomerWithFamilyToResponse(customer, updatedFamilies), nil
+	return converter.CustomerWithFamilyToResponse(Customer, updatedFamilies), nil
+}
+
+func (c *CustomerUseCase) GetCustomerWithFamily(
+	ctx context.Context,
+	request *model.GetFamilyListRequest,
+) (*model.CustomerWithFamilyResponse, error) {
+
+	tx := c.DB.WithContext(ctx)
+
+	if err := c.Validate.Struct(request); err != nil {
+		c.Log.WithError(err).Error("error validating request body")
+		return nil, helper.NewBadRequest("Input is incorrect", err)
+	}
+	// 1. GET CUSTOMER
+	Customer := new(entity.Customer)
+	if err := c.CustomerRepository.FindById(tx, Customer, request.ID); err != nil {
+		c.Log.WithError(err).Error("error getting Customer")
+		return nil, helper.NewNotFound("customer ID not found")
+	}
+
+	// 2. GET FAMILY LIST
+	families, err := c.FamilyListRepository.FindAllFamily(tx, request.ID)
+	if err != nil {
+		c.Log.WithError(err).Error("failed finding family list")
+		return nil, helper.NewInternal("Internal server error")
+	}
+
+	// jika tidak ada family → pakai slice kosong (lebih aman untuk FE)
+	if len(families) == 0 {
+		families = []entity.FamilyList{}
+	}
+
+	// 3. RETURN RESULT
+	return converter.CustomerWithFamilyToResponse(Customer, families), nil
 }
