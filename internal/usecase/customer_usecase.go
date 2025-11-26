@@ -161,6 +161,11 @@ func (c *CustomerUseCase) Delete(ctx context.Context, request *model.DeleteCusto
 		return helper.NewNotFound("Customer Id Not Fund")
 	}
 
+	if err := c.FamilyListRepository.DeleteByID(tx, request.ID); err != nil {
+		c.Log.WithError(err).Error("error deleting Customer")
+		return helper.NewInternal("Internal service error")
+	}
+
 	if err := c.CustomerRepository.Delete(tx, Customer); err != nil {
 		c.Log.WithError(err).Error("error deleting Customer")
 		return helper.NewInternal("Internal service error")

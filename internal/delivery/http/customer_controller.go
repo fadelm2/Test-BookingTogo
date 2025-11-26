@@ -173,3 +173,25 @@ func (h *CustomerController) GetCustomerWithFamily(w http.ResponseWriter, r *htt
 
 	helper.WriteJSON(w, result)
 }
+
+func (c *CustomerController) DE(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, err := strconv.Atoi(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid customer ID", http.StatusBadRequest)
+		return
+	}
+
+	c.Log.Info("Request delete Customer by id :", id)
+	req := new(model.DeleteCustomerRequest)
+
+	req.ID = id
+
+	err = c.UseCase.Delete(r.Context(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	helper.WriteJSON(w, "Family deleted successfully")
+}
