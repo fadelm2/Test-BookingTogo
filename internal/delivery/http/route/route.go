@@ -18,10 +18,7 @@ func (c *RouteConfig) Setup() {
 
 func (c *RouteConfig) SetupGuestRoute() {
 	//
-	//c.App.HandleFunc("/api/customer", c.CustomerController.Create).Methods("POST")
-	//c.App.HandleFunc("/api/customer/{id}", c.CustomerController.Update).Methods("PUT")
 	c.App.HandleFunc("/api/customer", c.CustomerController.FindAll).Methods("GET")
-	//c.App.HandleFunc("/api/customer/{id}", c.CustomerController.GetCustomer).Methods("GET")
 	c.App.HandleFunc("/api/customer/{id}", c.CustomerController.Delete).Methods("DELETE")
 
 	c.App.HandleFunc("/api/customer", c.CustomerController.CreateWithFamily).Methods("POST")
