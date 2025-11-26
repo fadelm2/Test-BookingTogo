@@ -27,6 +27,8 @@ func main() {
 			"http://localhost:5173",
 			"http://localhost:5174",
 			"http://localhost:8080",
+			"https://test.fadelweb.site",
+			"https://testapi.fadelweb.site",
 		},
 		AllowedMethods: []string{
 			http.MethodGet,

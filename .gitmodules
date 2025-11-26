@@ -1,0 +1,3 @@
+[submodule "react-crud-customer"]
+	path = react-crud-customer
+	url = git@github.com:fadelm2/react-test-bookingtogo.git
