@@ -12,6 +12,6 @@ func FamilyListToResponse(f *entity.FamilyList) *model.FamilyListResponse {
 		CustomerID: f.CustomerID,
 		Relation:   f.Relation,
 		Name:       f.Name,
-		Dob:        f.Dob.Format("2006-01-02"),
+		Dob:        f.Dob,
 	}
 }

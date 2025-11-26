@@ -28,9 +28,9 @@ POST http://localhost:8080/api/customer/1/family
 Accept: application/json
 
 {
-  "nationality_id": 1,
-  "name": "Bang Fadel",
-  "dob": "1995-07-12",
-  "phone_number": "0812345689434",
-  "email": "fadel@example.com"
+  "relation": "adek",
+  "name": "Udinssdsada",
+  "dob": "1995-08-12"
 }
+
+###

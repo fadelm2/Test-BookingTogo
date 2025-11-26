@@ -23,15 +23,23 @@ func NewFamilyListController(useCase *usecase.FamilyListUseCase, log *logrus.Log
 }
 
 func (c *FamilyListController) Create(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
 	request := new(model.CreateFamilyListRequest)
 
-	c.Log.Info("Request Create Family", request)
+	// set cst_id
+	request.CustomerID, _ = helper.StringToInt(params["id"])
 
+	// decode body
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		helper.WriteJSON(w, helper.NewBadRequest("Invalid JSON format", err))
 		return
 	}
 
+	// log setelah request terisi
+	jsonData, _ := json.MarshalIndent(request, "", "  ")
+	c.Log.Info("Request Create Family: " + string(jsonData))
+
+	// execute usecase
 	result, err := c.UseCase.Create(r.Context(), request)
 	if err != nil {
 		helper.WriteJSON(w, err)

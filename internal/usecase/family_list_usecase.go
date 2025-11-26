@@ -10,7 +10,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"time"
 )
 
 type FamilyListUseCase struct {
@@ -51,14 +50,9 @@ func (c *FamilyListUseCase) Create(ctx context.Context,
 		return nil, helper.NewNotFound("customer id not found")
 	}
 
-	parsedDob, err := time.Parse("2006-01-02", request.Dob)
-	if err != nil {
-		c.Log.Error(err)
-	}
-
 	FamilyList := &entity.FamilyList{
 		Name:       request.Name,
-		Dob:        parsedDob, // harusnya open langsung default
+		Dob:        request.Dob, // harusnya open langsung default
 		Relation:   request.Relation,
 		CustomerID: request.CustomerID,
 	}
